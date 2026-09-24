@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Control de Negocio</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Negocio">
+<meta name="theme-color" content="#C1502E">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #FBF6EF;
+    --bg-elevated: #FFFFFF;
+    --text: #2B231C;
+    --text-muted: #7A6E62;
+    --border: #E7DDD0;
+    --primary: #C1502E;
+    --primary-dark: #A03F22;
+    --primary-soft: #F4DFD3;
+    --accent: #3E7A57;
+    --accent-soft: #DCEEE1;
+    --danger: #B3372B;
+    --danger-soft: #F6DEDA;
+    --warn: #B7791F;
+    --warn-soft: #FAEBCE;
+    --shadow: 0 2px 10px rgba(43,35,28,0.06), 0 1px 2px rgba(43,35,28,0.08);
+    --radius: 14px;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1C1712;
+      --bg-elevated: #262019;
+      --text: #F2E9DE;
+      --text-muted: #B3A492;
+      --border: #3A3126;
+      --primary: #E1794F;
+      --primary-dark: #F2946B;
+      --primary-soft: #3A281F;
+      --accent: #63B588;
+      --accent-soft: #23352A;
+      --danger: #E0685A;
+      --danger-soft: #3A2420;
+      --warn: #E0B15C;
+      --warn-soft: #3A3020;
+      --shadow: 0 2px 10px rgba(0,0,0,0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1C1712;
+    --bg-elevated: #262019;
+    --text: #F2E9DE;
+    --text-muted: #B3A492;
+    --border: #3A3126;
+    --primary: #E1794F;
+    --primary-dark: #F2946B;
+    --primary-soft: #3A281F;
+    --accent: #63B588;
+    --accent-soft: #23352A;
+    --danger: #E0685A;
+    --danger-soft: #3A2420;
+    --warn: #E0B15C;
+    --warn-soft: #3A3020;
+    --shadow: 0 2px 10px rgba(0,0,0,0.35);
+  }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); height: 100%; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    min-height: 100%;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1,h2,h3 { font-family: 'Poppins', 'Inter', sans-serif; margin: 0; }
+  header {
+    position: sticky; top: 0; z-index: 20;
+    padding: calc(14px + env(safe-area-inset-top, 0px)) 18px 0 18px;
+    background: linear-gradient(180deg, var(--bg) 80%, transparent);
+  }
+  .title-row { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .title-row h1 { font-size: 20px; color: var(--primary-dark); }
+  .subtitle { color: var(--text-muted); font-size: 13px; margin-top: 2px; }
+  #installApp { display:none; flex-shrink:0; }
+  nav {
+    display: flex; gap: 6px; overflow-x: auto; margin-top: 14px; padding-bottom: 10px;
+    scrollbar-width: none;
+  }
+  nav::-webkit-scrollbar { display: none; }
+  nav button {
+    flex: 0 0 auto;
+    display: flex; align-items: center; gap: 6px;
+    padding: 9px 14px; border-radius: 999px; border: 1px solid var(--border);
+    background: var(--bg-elevated); color: var(--text-muted);
+    font-family: 'Inter', sans-serif; font-weight: 600; font-size: 13.5px;
+    cursor: pointer; white-space: nowrap; transition: all .15s ease;
+  }
+  nav button.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+  main { padding: 12px 18px 90px 18px; max-width: 760px; margin: 0 auto; }
+  .card {
+    background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 16px; margin-bottom: 14px; box-shadow: var(--shadow);
+  }
+  .card h2 { font-size: 16px; margin-bottom: 12px; }
+  .grid-stats { display:grid; grid-template-columns: repeat(2,1fr); gap: 10px; }
+  @media (min-width: 520px) { .grid-stats { grid-template-columns: repeat(4,1fr); } }
+  .stat { background: var(--primary-soft); border-radius: 12px; padding: 12px; }
+  .stat.accent { background: var(--accent-soft); }
+  .stat.warn { background: var(--warn-soft); }
+  .stat .label { font-size: 11.5px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .03em; }
+  .stat .value { font-family:'Poppins',sans-serif; font-size: 19px; font-weight: 700; margin-top: 4px; color: var(--text); }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+  .field { display: flex; flex-direction: column; gap: 5px; flex: 1 1 130px; }
+  .field label { font-size: 12.5px; color: var(--text-muted); font-weight: 600; }
+  input, select {
+    font-family: 'Inter', sans-serif; font-size: 14.5px; padding: 10px 11px;
+    border-radius: 10px; border: 1px solid var(--border); background: var(--bg);
+    color: var(--text); width: 100%;
+  }
+  input:focus, select:focus { outline: 2px solid var(--primary); outline-offset: 1px; }
+  button.btn {
+    font-family: 'Inter', sans-serif; font-weight: 700; font-size: 14px;
+    padding: 10px 16px; border-radius: 10px; border: none; cursor: pointer;
+    background: var(--primary); color: #fff; transition: background .15s;
+  }
+  button.btn:hover { background: var(--primary-dark); }
+  button.btn.secondary { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+  button.btn.danger { background: var(--danger-soft); color: var(--danger); }
+  button.btn.small { padding: 6px 10px; font-size: 12.5px; border-radius: 8px; }
+  .list-item {
+    display: flex; justify-content: space-between; align-items: center; gap: 10px;
+    padding: 11px 0; border-bottom: 1px solid var(--border);
+  }
+  .list-item:last-child { border-bottom: none; }
+  .li-main { min-width: 0; }
+  .li-title { font-weight: 600; font-size: 14.5px; }
+  .li-sub { font-size: 12.5px; color: var(--text-muted); margin-top: 2px; }
+  .li-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .badge { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; }
+  .badge.low { background: var(--danger-soft); color: var(--danger); }
+  .empty { color: var(--text-muted); font-size: 13.5px; text-align: center; padding: 18px 0; }
+  .tabs-2 { display: flex; gap: 8px; margin-bottom: 14px; }
+  .tabs-2 button { flex: 1; padding: 9px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-elevated); color: var(--text-muted); font-weight: 700; cursor: pointer; }
+  .tabs-2 button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .period-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .period-nav .range { font-weight: 700; font-size: 14.5px; }
+  .period-nav button { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 6px 11px; cursor: pointer; color: var(--text); font-size: 15px; }
+  .hint { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+  .save-toast {
+    position: fixed; bottom: calc(16px + env(safe-area-inset-bottom,0px)); left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--text); color: var(--bg); padding: 9px 16px; border-radius: 999px; font-size: 13px; font-weight: 600;
+    opacity: 0; transition: all .25s ease; pointer-events: none; z-index: 50;
+  }
+  .save-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .offline-note { background: var(--warn-soft); color: var(--warn); padding: 10px 14px; border-radius: 10px; font-size: 13px; margin-bottom: 14px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="title-row">
+    <div>
+      <h1>🍽️ Control de Negocio</h1>
+      <div class="subtitle" id="fechaHoy"></div>
+    </div>
+    <button class="btn secondary small" id="installApp" type="button">Instalar</button>
+  </div>
+  <nav id="tabNav"></nav>
+</header>
+
+<main id="app"></main>
+<div class="save-toast" id="toast"></div>
+
+<script>
+(() => {
+  const DAY_NAMES = ["dom","lun","mar","mié","jue","vie","sáb"];
+  const MONTH_NAMES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+
+  let db = null;
+  let dbReady = false;
+  const LOCAL_STORAGE_KEY = 'control-negocio-datos';
+
+  const state = {
+    tab: 'resumen',
+    productos: [],
+    inventario: [],
+    ventas: [],
+    gastos: [],
+    cortePeriodo: 'semana', // 'semana' | 'mes'
+    corteOffset: 0 // 0 = actual, -1 = anterior, etc.
+  };
+
+  // ---------- utilidades de fecha ----------
+  function pad(n){ return n < 10 ? '0'+n : ''+n; }
+  function toISODate(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+  function todayISO(){ return toISODate(new Date()); }
+  function fmtMoney(n){
+    n = Number(n)||0;
+    return n.toLocaleString('es-MX', {style:'currency', currency:'MXN'});
+  }
+  function fmtDateLabel(iso){
+    const [y,m,d] = iso.split('-').map(Number);
+    const dt = new Date(y, m-1, d);
+    return d + ' ' + MONTH_NAMES[dt.getMonth()].slice(0,3) + ' ' + y;
+  }
+  function getWeekRange(offset){
+    const now = new Date();
+    const day = now.getDay(); // 0=domingo
+    const diffToMonday = (day === 0 ? -6 : 1 - day);
+    const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diffToMonday + offset*7);
+    const sunday = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + 6);
+    return { start: toISODate(monday), end: toISODate(sunday), label: 'Semana del ' + monday.getDate() + ' ' + MONTH_NAMES[monday.getMonth()].slice(0,3) + ' al ' + sunday.getDate() + ' ' + MONTH_NAMES[sunday.getMonth()].slice(0,3) };
+  }
+  function getMonthRange(offset){
+    const now = new Date();
+    const first = new Date(now.getFullYear(), now.getMonth() + offset, 1);
+    const last = new Date(now.getFullYear(), now.getMonth() + offset + 1, 0);
+    return { start: toISODate(first), end: toISODate(last), label: MONTH_NAMES[first.getMonth()][0].toUpperCase()+MONTH_NAMES[first.getMonth()].slice(1) + ' ' + first.getFullYear() };
+  }
+
+  // ---------- inicialización db ----------
+  async function initDb(){
+    try {
+      if (window.claude && window.claude.use) {
+        db = await window.claude.use('db');
+      }
+    } catch(e) { db = null; }
+    if (!db) {
+      loadLocalData();
+      dbReady = true;
+      render();
+      return;
+    }
+    dbReady = true;
+    subscribe('productos', 'productos');
+    subscribe('inventario', 'inventario');
+    subscribe('ventas', 'ventas', 'fecha');
+    subscribe('gastos', 'gastos', 'fecha');
+  }
+
+  function subscribe(path, key, orderField){
+    try {
+      let q = db.collection(path);
+      if (orderField) q = q.orderBy(orderField, 'desc');
+      q.limit(1000).onSnapshot((snap) => {
+        state[key] = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        render();
+      }, (err) => {
+        console.error('db error', path, err);
+      });
+    } catch(e){ console.error(e); }
+  }
+
+  function showOffline(){
+    const el = document.getElementById('app');
+    el.innerHTML = '<div class="offline-note">No se pudo conectar al almacenamiento en este momento. Intenta recargar la página.</div>';
+  }
+
+  function loadLocalData(){
+    try {
+      const saved = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
+      state.productos = Array.isArray(saved.productos) ? saved.productos : [];
+      state.inventario = Array.isArray(saved.inventario) ? saved.inventario : [];
+      state.ventas = Array.isArray(saved.ventas) ? saved.ventas : [];
+      state.gastos = Array.isArray(saved.gastos) ? saved.gastos : [];
+    } catch(e) {
+      console.error('local storage error', e);
+    }
+  }
+
+  function saveLocalData(){
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({
+      productos: state.productos,
+      inventario: state.inventario,
+      ventas: state.ventas,
+      gastos: state.gastos
+    }));
+  }
+
+  function toast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(()=> t.classList.remove('show'), 1600);
+  }
+
+  // ---------- escritura ----------
+  async function addDoc(path, data){
+    if (!dbReady) return;
+    if (!db) {
+      state[path].unshift({ id: Date.now().toString(36) + Math.random().toString(36).slice(2), ...data });
+      saveLocalData();
+      render();
+      toast('Guardado ✓');
+      return;
+    }
+    try { await db.collection(path).add(data); toast('Guardado ✓'); }
+    catch(e){ console.error(e); toast('No se pudo guardar'); }
+  }
+  async function updateDoc(path, id, data){
+    if (!dbReady) return;
+    if (!db) {
+      const item = state[path].find(entry => entry.id === id);
+      if (!item) return;
+      Object.assign(item, data);
+      saveLocalData();
+      render();
+      toast('Actualizado ✓');
+      return;
+    }
+    try { await db.doc(path+'/'+id).update(data); toast('Actualizado ✓'); }
+    catch(e){ console.error(e); toast('No se pudo actualizar'); }
+  }
+  async function deleteDoc(path, id){
+    if (!dbReady) return;
+    if (!db) {
+      state[path] = state[path].filter(entry => entry.id !== id);
+      saveLocalData();
+      render();
+      toast('Eliminado');
+      return;
+    }
+    try { await db.doc(path+'/'+id).delete(); toast('Eliminado'); }
+    catch(e){ console.error(e); toast('No se pudo eliminar'); }
+  }
+
+  // ---------- cálculos ----------
+  function sumVentasEnRango(start, end){
+    return state.ventas.filter(v => v.fecha >= start && v.fecha <= end);
+  }
+  function sumGastosEnRango(start, end){
+    return state.gastos.filter(g => g.fecha >= start && g.fecha <= end);
+  }
+  function resumenRango(start, end){
+    const ventas = sumVentasEnRango(start, end);
+    const gastos = sumGastosEnRango(start, end);
+    const totalVentas = ventas.reduce((a,v)=>a+(Number(v.total)||0),0);
+    const totalCosto = ventas.reduce((a,v)=>a+(Number(v.costoTotal)||0),0);
+    const totalGastos = gastos.reduce((a,g)=>a+(Number(g.monto)||0),0);
+    const gananciaBruta = totalVentas - totalCosto;
+    const gananciaNeta = gananciaBruta - totalGastos;
+    return { ventas, gastos, totalVentas, totalCosto, totalGastos, gananciaBruta, gananciaNeta };
+  }
+
+  // ---------- render ----------
+  const TABS = [
+    {id:'resumen', label:'📊 Resumen'},
+    {id:'ventas', label:'🧾 Ventas'},
+    {id:'productos', label:'🍽️ Productos'},
+    {id:'inventario', label:'📦 Inventario'},
+    {id:'gastos', label:'💸 Gastos'},
+    {id:'cortes', label:'📅 Cortes'},
+    {id:'ajustes', label:'⚙️ Ajustes'},
+  ];
+
+  function renderNav(){
+    const nav = document.getElementById('tabNav');
+    nav.innerHTML = TABS.map(t => `<button data-tab="${t.id}" class="${state.tab===t.id?'active':''}">${t.label}</button>`).join('');
+    nav.querySelectorAll('button').forEach(b => b.addEventListener('click', () => { state.tab = b.dataset.tab; render(); }));
+  }
+
+  function render(){
+    renderNav();
+    const app = document.getElementById('app');
+    if (state.tab === 'resumen') app.innerHTML = renderResumen();
+    else if (state.tab === 'ventas') app.innerHTML = renderVentas();
+    else if (state.tab === 'productos') app.innerHTML = renderProductos();
+    else if (state.tab === 'inventario') app.innerHTML = renderInventario();
+    else if (state.tab === 'gastos') app.innerHTML = renderGastos();
+    else if (state.tab === 'cortes') app.innerHTML = renderCortes();
+    else if (state.tab === 'ajustes') app.innerHTML = renderAjustes();
+    attachHandlers();
+  }
+
+  function renderResumen(){
+    const hoy = todayISO();
+    const rHoy = resumenRango(hoy, hoy);
+    const wk = getWeekRange(0);
+    const rSemana = resumenRango(wk.start, wk.end);
+    const mo = getMonthRange(0);
+    const rMes = resumenRango(mo.start, mo.end);
+    const bajoStock = state.inventario.filter(i => Number(i.stockMinimo) > 0 && Number(i.cantidad) <= Number(i.stockMinimo));
+
+    return `
+      <div class="card">
+        <h2>Hoy</h2>
+        <div class="grid-stats">
+          <div class="stat"><div class="label">Ventas</div><div class="value">${fmtMoney(rHoy.totalVentas)}</div></div>
+          <div class="stat warn"><div class="label">Gastos</div><div class="value">${fmtMoney(rHoy.totalGastos)}</div></div>
+          <div class="stat accent"><div class="label">Ganancia neta</div><div class="value">${fmtMoney(rHoy.gananciaNeta)}</div></div>
+          <div class="stat"><div class="label">Tickets</div><div class="value">${rHoy.ventas.length}</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Esta semana</h2>
+        <div class="grid-stats">
+          <div class="stat"><div class="label">Ventas</div><div class="value">${fmtMoney(rSemana.totalVentas)}</div></div>
+          <div class="stat warn"><div class="label">Gastos</div><div class="value">${fmtMoney(rSemana.totalGastos)}</div></div>
+          <div class="stat accent"><div class="label">Ganancia neta</div><div class="value">${fmtMoney(rSemana.gananciaNeta)}</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Este mes</h2>
+        <div class="grid-stats">
+          <div class="stat"><div class="label">Ventas</div><div class="value">${fmtMoney(rMes.totalVentas)}</div></div>
+          <div class="stat warn"><div class="label">Gastos</div><div class="value">${fmtMoney(rMes.totalGastos)}</div></div>
+          <div class="stat accent"><div class="label">Ganancia neta</div><div class="value">${fmtMoney(rMes.gananciaNeta)}</div></div>
+        </div>
+      </div>
+      ${bajoStock.length ? `
+      <div class="card">
+        <h2>⚠️ Insumos con stock bajo</h2>
+        ${bajoStock.map(i => `
+          <div class="list-item">
+            <div class="li-main">
+              <div class="li-title">${escapeHtml(i.nombre)}</div>
+              <div class="li-sub">Quedan ${i.cantidad} ${escapeHtml(i.unidad||'')} · mínimo ${i.stockMinimo}</div>
+            </div>
+            <span class="badge low">Bajo</span>
+          </div>`).join('')}
+      </div>` : ''}
+    `;
+  }
+
+  function renderVentas(){
+    const productosOpts = state.productos.map(p => `<option value="${p.id}">${escapeHtml(p.nombre)} — ${fmtMoney(p.precioVenta)}</option>`).join('');
+    const recientes = state.ventas.slice(0, 20);
+    return `
+      <div class="card">
+        <h2>Registrar venta</h2>
+        ${state.productos.length === 0 ? '<div class="hint">Primero agrega tus productos en la pestaña "Productos" para poder registrar ventas.</div>' : `
+        <form id="formVenta">
+          <div class="row">
+            <div class="field" style="flex:2 1 200px;">
+              <label>Producto</label>
+              <select name="productoId" required>${productosOpts}</select>
+            </div>
+            <div class="field" style="flex:0 0 90px;">
+              <label>Cantidad</label>
+              <input type="number" name="cantidad" min="1" step="1" value="1" required>
+            </div>
+            <div class="field" style="flex:0 0 150px;">
+              <label>Fecha</label>
+              <input type="date" name="fecha" value="${todayISO()}" required>
+            </div>
+          </div>
+          <div class="row">
+            <div class="field" style="flex:0 0 160px;">
+              <label>Con cuánto paga (efectivo)</label>
+              <input type="number" name="recibido" min="0" step="0.01" placeholder="Opcional">
+            </div>
+          </div>
+          <div class="row" id="ventaTotales" style="margin-top:4px;">
+            <div class="stat" style="flex:1 1 140px;">
+              <div class="label">Total a cobrar</div>
+              <div class="value" id="ventaTotalValue">$0.00</div>
+            </div>
+            <div class="stat" id="ventaCambioBox" style="flex:1 1 140px;">
+              <div class="label">Cambio</div>
+              <div class="value" id="ventaCambioValue">—</div>
+            </div>
+          </div>
+          <div class="row" style="margin-top:10px;">
+            <button class="btn" type="submit">Registrar venta</button>
+          </div>
+        </form>`}
+      </div>
+      <div class="card">
+        <h2>Ventas recientes</h2>
+        ${recientes.length === 0 ? '<div class="empty">Aún no hay ventas registradas.</div>' : recientes.map(v => `
+          <div class="list-item">
+            <div class="li-main">
+              <div class="li-title">${escapeHtml(v.productoNombre)} × ${v.cantidad}</div>
+              <div class="li-sub">${fmtDateLabel(v.fecha)} · ${fmtMoney(v.total)} · ganancia ${fmtMoney((Number(v.total)||0)-(Number(v.costoTotal)||0))}${(v.recibido!=null && v.recibido!=='') ? ' · recibido '+fmtMoney(v.recibido)+' · cambio '+fmtMoney(v.cambio) : ''}</div>
+            </div>
+            <div class="li-actions">
+              <button class="btn danger small" data-del-venta="${v.id}">✕</button>
+            </div>
+          </div>`).join('')}
+      </div>
+    `;
+  }
+
+  function renderProductos(){
+    return `
+      <div class="card">
+        <h2>Agregar producto o platillo</h2>
+        <form id="formProducto">
+          <div class="row">
+            <div class="field" style="flex:2 1 160px;">
+              <label>Nombre</label>
+              <input type="text" name="nombre" required placeholder="Ej. Torta de asada">
+            </div>
+            <div class="field">
+              <label>Precio de venta</label>
+              <input type="number" name="precioVenta" min="0" step="0.01" required>
+            </div>
+            <div class="field">
+              <label>Costo (insumos)</label>
+              <input type="number" name="costo" min="0" step="0.01" required>
+            </div>
+          </div>
+          <div class="row" style="margin-top:10px;">
+            <button class="btn" type="submit">Agregar producto</button>
+          </div>
+        </form>
+      </div>
+      <div class="card">
+        <h2>Tu menú</h2>
+        ${state.productos.length === 0 ? '<div class="empty">Todavía no agregas productos.</div>' : state.productos.map(p => `
+          <div class="list-item">
+            <div class="li-main">
+              <div class="li-title">${escapeHtml(p.nombre)}</div>
+              <div class="li-sub">Venta ${fmtMoney(p.precioVenta)} · costo ${fmtMoney(p.costo)} · ganancia ${fmtMoney((Number(p.precioVenta)||0)-(Number(p.costo)||0))}</div>
+            </div>
+            <div class="li-actions">
+              <button class="btn danger small" data-del-producto="${p.id}">✕</button>
+            </div>
+          </div>`).join('')}
+      </div>
+    `;
+  }
+
+  function renderInventario(){
+    return `
+      <div class="card">
+        <h2>Agregar insumo</h2>
+        <form id="formInsumo">
+          <div class="row">
+            <div class="field" style="flex:2 1 160px;">
+              <label>Nombre</label>
+              <input type="text" name="nombre" required placeholder="Ej. Carne asada">
+            </div>
+            <div class="field">
+              <label>Cantidad</label>
+              <input type="number" name="cantidad" min="0" step="0.01" required>
+            </div>
+            <div class="field">
+              <label>Unidad</label>
+              <input type="text" name="unidad" placeholder="kg, litros, pzas" required>
+            </div>
+          </div>
+          <div class="row">
+            <div class="field">
+              <label>Costo unitario</label>
+              <input type="number" name="costoUnitario" min="0" step="0.01" value="0">
+            </div>
+            <div class="field">
+              <label>Stock mínimo (alerta)</label>
+              <input type="number" name="stockMinimo" min="0" step="0.01" value="0">
+            </div>
+          </div>
+          <div class="row" style="margin-top:10px;">
+            <button class="btn" type="submit">Agregar insumo</button>
+          </div>
+        </form>
+      </div>
+      <div class="card">
+        <h2>Inventario actual</h2>
+        ${state.inventario.length === 0 ? '<div class="empty">Todavía no agregas insumos.</div>' : state.inventario.map(i => {
+          const bajo = Number(i.stockMinimo) > 0 && Number(i.cantidad) <= Number(i.stockMinimo);
+          return `
+          <div class="list-item">
+            <div class="li-main">
+              <div class="li-title">${escapeHtml(i.nombre)} ${bajo ? '<span class="badge low">Bajo</span>' : ''}</div>
+              <div class="li-sub">${i.cantidad} ${escapeHtml(i.unidad||'')} · costo unit. ${fmtMoney(i.costoUnitario)}</div>
+            </div>
+            <div class="li-actions">
+              <button class="btn secondary small" data-adj-insumo="${i.id}" data-delta="1">+1</button>
+              <button class="btn secondary small" data-adj-insumo="${i.id}" data-delta="-1">−1</button>
+              <button class="btn danger small" data-del-insumo="${i.id}">✕</button>
+            </div>
+          </div>`; }).join('')}
+      </div>
+    `;
+  }
+
+  function renderGastos(){
+    const recientes = state.gastos.slice(0, 20);
+    return `
+      <div class="card">
+        <h2>Registrar gasto</h2>
+        <form id="formGasto">
+          <div class="row">
+            <div class="field" style="flex:2 1 160px;">
+              <label>Concepto</label>
+              <input type="text" name="concepto" required placeholder="Ej. Renta, luz, gas, sueldos">
+            </div>
+            <div class="field">
+              <label>Monto</label>
+              <input type="number" name="monto" min="0" step="0.01" required>
+            </div>
+            <div class="field" style="flex:0 0 150px;">
+              <label>Fecha</label>
+              <input type="date" name="fecha" value="${todayISO()}" required>
+            </div>
+          </div>
+          <div class="row" style="margin-top:10px;">
+            <button class="btn" type="submit">Registrar gasto</button>
+          </div>
+        </form>
+      </div>
+      <div class="card">
+        <h2>Gastos recientes</h2>
+        ${recientes.length === 0 ? '<div class="empty">Aún no hay gastos registrados.</div>' : recientes.map(g => `
+          <div class="list-item">
+            <div class="li-main">
+              <div class="li-title">${escapeHtml(g.concepto)}</div>
+              <div class="li-sub">${fmtDateLabel(g.fecha)} · ${fmtMoney(g.monto)}</div>
+            </div>
+            <div class="li-actions">
+              <button class="btn danger small" data-del-gasto="${g.id}">✕</button>
+            </div>
+          </div>`).join('')}
+      </div>
+    `;
+  }
+
+  function renderCortes(){
+    const range = state.cortePeriodo === 'semana' ? getWeekRange(state.corteOffset) : getMonthRange(state.corteOffset);
+    const r = resumenRango(range.start, range.end);
+    return `
+      <div class="card">
+        <div class="tabs-2">
+          <button class="${state.cortePeriodo==='semana'?'active':''}" data-periodo="semana">Corte semanal</button>
+          <button class="${state.cortePeriodo==='mes'?'active':''}" data-periodo="mes">Corte mensual</button>
+        </div>
+        <div class="period-nav">
+          <button data-corte-nav="-1">‹</button>
+          <div class="range">${range.label}</div>
+          <button data-corte-nav="1" ${state.corteOffset>=0?'disabled':''}>›</button>
+        </div>
+        <div class="grid-stats">
+          <div class="stat"><div class="label">Ventas totales</div><div class="value">${fmtMoney(r.totalVentas)}</div></div>
+          <div class="stat"><div class="label">Costo de productos</div><div class="value">${fmtMoney(r.totalCosto)}</div></div>
+          <div class="stat warn"><div class="label">Gastos</div><div class="value">${fmtMoney(r.totalGastos)}</div></div>
+          <div class="stat accent"><div class="label">Ganancia neta</div><div class="value">${fmtMoney(r.gananciaNeta)}</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Ventas del periodo (${r.ventas.length})</h2>
+        ${r.ventas.length === 0 ? '<div class="empty">Sin ventas en este periodo.</div>' : r.ventas.map(v => `
+          <div class="list-item">
+            <div class="li-main">
+              <div class="li-title">${escapeHtml(v.productoNombre)} × ${v.cantidad}</div>
+              <div class="li-sub">${fmtDateLabel(v.fecha)}</div>
+            </div>
+            <div class="li-main" style="text-align:right;">${fmtMoney(v.total)}</div>
+          </div>`).join('')}
+      </div>
+      <div class="card">
+        <h2>Gastos del periodo (${r.gastos.length})</h2>
+        ${r.gastos.length === 0 ? '<div class="empty">Sin gastos en este periodo.</div>' : r.gastos.map(g => `
+          <div class="list-item">
+            <div class="li-main">
+              <div class="li-title">${escapeHtml(g.concepto)}</div>
+              <div class="li-sub">${fmtDateLabel(g.fecha)}</div>
+            </div>
+            <div class="li-main" style="text-align:right;">${fmtMoney(g.monto)}</div>
+          </div>`).join('')}
+      </div>
+    `;
+  }
+
+  function renderAjustes(){
+    return `
+      <div class="card">
+        <h2>Respaldo de datos</h2>
+        <p class="hint">Guarda una copia de tus productos, ventas, inventario y gastos. El archivo se puede restaurar en este mismo programa.</p>
+        <div class="row" style="margin-top:10px;">
+          <button class="btn" id="exportBackup" type="button">Descargar respaldo</button>
+          <button class="btn secondary" id="importBackup" type="button">Restaurar respaldo</button>
+          <input id="backupFile" type="file" accept="application/json" hidden>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Datos actuales</h2>
+        <div class="li-sub">Productos: ${state.productos.length} · Ventas: ${state.ventas.length} · Insumos: ${state.inventario.length} · Gastos: ${state.gastos.length}</div>
+      </div>
+    `;
+  }
+
+  function updateVentaTotales(){
+    const form = document.getElementById('formVenta');
+    if (!form) return;
+    const fd = new FormData(form);
+    const producto = state.productos.find(p => p.id === fd.get('productoId'));
+    const cantidad = Number(fd.get('cantidad')) || 0;
+    const total = producto ? (Number(producto.precioVenta) || 0) * cantidad : 0;
+    const recibidoRaw = fd.get('recibido');
+    const totalEl = document.getElementById('ventaTotalValue');
+    const cambioBox = document.getElementById('ventaCambioBox');
+    const cambioEl = document.getElementById('ventaCambioValue');
+    if (!totalEl || !cambioBox || !cambioEl) return;
+    totalEl.textContent = fmtMoney(total);
+    const label = cambioBox.querySelector('.label');
+    if (recibidoRaw !== null && recibidoRaw !== '') {
+      const recibido = Number(recibidoRaw) || 0;
+      const cambio = recibido - total;
+      cambioEl.textContent = fmtMoney(Math.abs(cambio));
+      if (cambio < 0) {
+        cambioBox.className = 'stat warn';
+        if (label) label.textContent = 'Falta por pagar';
+      } else {
+        cambioBox.className = 'stat accent';
+        if (label) label.textContent = 'Cambio a entregar';
+      }
+    } else {
+      cambioEl.textContent = '—';
+      cambioBox.className = 'stat';
+      if (label) label.textContent = 'Cambio';
+    }
+  }
+
+  function escapeHtml(s){
+    return String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  // ---------- handlers ----------
+  function attachHandlers(){
+    const exportButton = document.getElementById('exportBackup');
+    if (exportButton) exportButton.addEventListener('click', () => {
+      const backup = {
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        productos: state.productos,
+        inventario: state.inventario,
+        ventas: state.ventas,
+        gastos: state.gastos
+      };
+      const blob = new Blob([JSON.stringify(backup, null, 2)], {type: 'application/json'});
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'respaldo-control-negocio-' + todayISO() + '.json';
+      link.click();
+      URL.revokeObjectURL(url);
+      toast('Respaldo descargado ✓');
+    });
+
+    const importButton = document.getElementById('importBackup');
+    const backupFile = document.getElementById('backupFile');
+    if (importButton && backupFile) {
+      importButton.addEventListener('click', () => backupFile.click());
+      backupFile.addEventListener('change', async () => {
+        const file = backupFile.files[0];
+        if (!file || !confirm('Esto reemplazará los datos actuales. ¿Continuar?')) return;
+        try {
+          const backup = JSON.parse(await file.text());
+          ['productos', 'inventario', 'ventas', 'gastos'].forEach(key => {
+            if (!Array.isArray(backup[key])) throw new Error('Formato inválido');
+            state[key] = backup[key];
+          });
+          saveLocalData();
+          render();
+          toast('Respaldo restaurado ✓');
+        } catch(e) {
+          console.error(e);
+          toast('Respaldo inválido');
+        }
+      });
+    }
+
+    const formVenta = document.getElementById('formVenta');
+    if (formVenta) {
+      updateVentaTotales();
+      formVenta.querySelectorAll('[name="productoId"],[name="cantidad"],[name="recibido"]').forEach(el => {
+        el.addEventListener('input', updateVentaTotales);
+        el.addEventListener('change', updateVentaTotales);
+      });
+      formVenta.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const fd = new FormData(formVenta);
+        const producto = state.productos.find(p => p.id === fd.get('productoId'));
+        if (!producto) return;
+        const cantidad = Number(fd.get('cantidad')) || 0;
+        const precioUnit = Number(producto.precioVenta) || 0;
+        const costoUnit = Number(producto.costo) || 0;
+        const total = +(precioUnit * cantidad).toFixed(2);
+        const recibidoRaw = fd.get('recibido');
+        const venta = {
+          productoId: producto.id,
+          productoNombre: producto.nombre,
+          cantidad,
+          precioUnit,
+          costoUnit,
+          total,
+          costoTotal: +(costoUnit * cantidad).toFixed(2),
+          fecha: fd.get('fecha') || todayISO(),
+          timestamp: new Date().toISOString()
+        };
+        if (recibidoRaw !== null && recibidoRaw !== '') {
+          const recibido = Number(recibidoRaw) || 0;
+          venta.recibido = recibido;
+          venta.cambio = +(recibido - total).toFixed(2);
+        }
+        addDoc('ventas', venta);
+        formVenta.reset();
+        updateVentaTotales();
+      });
+    }
+
+    const formProducto = document.getElementById('formProducto');
+    if (formProducto) formProducto.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const fd = new FormData(formProducto);
+      addDoc('productos', {
+        nombre: fd.get('nombre').trim(),
+        precioVenta: Number(fd.get('precioVenta')) || 0,
+        costo: Number(fd.get('costo')) || 0
+      });
+      formProducto.reset();
+    });
+
+    const formInsumo = document.getElementById('formInsumo');
+    if (formInsumo) formInsumo.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const fd = new FormData(formInsumo);
+      addDoc('inventario', {
+        nombre: fd.get('nombre').trim(),
+        cantidad: Number(fd.get('cantidad')) || 0,
+        unidad: fd.get('unidad').trim(),
+        costoUnitario: Number(fd.get('costoUnitario')) || 0,
+        stockMinimo: Number(fd.get('stockMinimo')) || 0
+      });
+      formInsumo.reset();
+    });
+
+    const formGasto = document.getElementById('formGasto');
+    if (formGasto) formGasto.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const fd = new FormData(formGasto);
+      addDoc('gastos', {
+        concepto: fd.get('concepto').trim(),
+        monto: Number(fd.get('monto')) || 0,
+        fecha: fd.get('fecha') || todayISO()
+      });
+      formGasto.reset();
+    });
+
+    document.querySelectorAll('[data-del-venta]').forEach(b => b.addEventListener('click', () => {
+      if (confirm('¿Eliminar esta venta?')) deleteDoc('ventas', b.dataset.delVenta);
+    }));
+    document.querySelectorAll('[data-del-producto]').forEach(b => b.addEventListener('click', () => {
+      if (confirm('¿Eliminar este producto?')) deleteDoc('productos', b.dataset.delProducto);
+    }));
+    document.querySelectorAll('[data-del-insumo]').forEach(b => b.addEventListener('click', () => {
+      if (confirm('¿Eliminar este insumo?')) deleteDoc('inventario', b.dataset.delInsumo);
+    }));
+    document.querySelectorAll('[data-del-gasto]').forEach(b => b.addEventListener('click', () => {
+      if (confirm('¿Eliminar este gasto?')) deleteDoc('gastos', b.dataset.delGasto);
+    }));
+    document.querySelectorAll('[data-adj-insumo]').forEach(b => b.addEventListener('click', () => {
+      const id = b.dataset.adjInsumo;
+      const delta = Number(b.dataset.delta);
+      const item = state.inventario.find(i => i.id === id);
+      if (!item) return;
+      const nueva = Math.max(0, (Number(item.cantidad)||0) + delta);
+      updateDoc('inventario', id, { cantidad: nueva });
+    }));
+
+    document.querySelectorAll('[data-periodo]').forEach(b => b.addEventListener('click', () => {
+      state.cortePeriodo = b.dataset.periodo;
+      state.corteOffset = 0;
+      render();
+    }));
+    document.querySelectorAll('[data-corte-nav]').forEach(b => b.addEventListener('click', () => {
+      state.corteOffset += Number(b.dataset.corteNav);
+      if (state.corteOffset > 0) state.corteOffset = 0;
+      render();
+    }));
+  }
+
+  function setFecha(){
+    const now = new Date();
+    document.getElementById('fechaHoy').textContent = DAY_NAMES[now.getDay()] + ', ' + now.getDate() + ' de ' + MONTH_NAMES[now.getMonth()] + ' de ' + now.getFullYear();
+  }
+
+  function setupInstall(){
+    let deferredPrompt = null;
+    const installButton = document.getElementById('installApp');
+    window.addEventListener('beforeinstallprompt', (event) => {
+      event.preventDefault();
+      deferredPrompt = event;
+      installButton.style.display = 'block';
+    });
+    installButton.addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      installButton.style.display = 'none';
+    });
+    window.addEventListener('appinstalled', () => {
+      installButton.style.display = 'none';
+      toast('Aplicación instalada ✓');
+    });
+  }
+
+  function setupServiceWorker(){
+    if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+      navigator.serviceWorker.register('./sw.js').catch(e => console.error('service worker error', e));
+    }
+  }
+
+  setupInstall();
+  setupServiceWorker();
+  setFecha();
+  render();
+  initDb();
+})();
+</script>
+</body>
+</html>

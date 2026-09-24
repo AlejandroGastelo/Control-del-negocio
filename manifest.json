@@ -1,0 +1,19 @@
+{
+  "name": "Control de Negocio",
+  "short_name": "Negocio",
+  "description": "Control de ventas, productos, inventario y gastos",
+  "start_url": "./control-negocio-codigo.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#FBF6EF",
+  "theme_color": "#C1502E",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
