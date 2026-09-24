@@ -1,4 +1,4 @@
-const CACHE_NAME = 'control-negocio-v2';
+const CACHE_NAME = 'control-negocio-v3';
 const APP_SHELL = [
   './',
   './control-negocio-codigo.html',

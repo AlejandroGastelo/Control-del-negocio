@@ -145,6 +145,17 @@
   .li-title { font-weight: 600; font-size: 14.5px; }
   .li-sub { font-size: 12.5px; color: var(--text-muted); margin-top: 2px; }
   .li-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .menu-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+  .menu-section { margin-bottom:14px; }
+  .menu-section h2 { font-size:16px; margin:0 0 12px; }
+  .menu-card { overflow:hidden; padding:0; margin:0; display:flex; flex-direction:column; }
+  .menu-image, .menu-image-placeholder { width:100%; aspect-ratio: 4 / 3; object-fit:cover; display:block; }
+  .menu-image-placeholder { display:flex; align-items:center; justify-content:center; background:var(--primary-soft); color:var(--primary-dark); font-size:42px; }
+  .menu-card-body { padding:14px; display:flex; flex-direction:column; gap:7px; flex:1; }
+  .menu-card-title { font-family:'Poppins',sans-serif; font-size:17px; font-weight:700; }
+  .menu-card-price { color:var(--primary-dark); font-size:20px; font-weight:700; }
+  .menu-card-meta { color:var(--text-muted); font-size:12.5px; }
+  .menu-card .li-actions { margin-top:auto; padding-top:6px; }
   .badge { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; }
   .badge.low { background: var(--danger-soft); color: var(--danger); }
   .empty { color: var(--text-muted); font-size: 13.5px; text-align: center; padding: 18px 0; }
@@ -510,22 +521,31 @@
             </div>
           </div>
           <div class="row" style="margin-top:10px;">
+            <div class="field" style="flex:2 1 240px;">
+              <label>Foto del platillo</label>
+              <input type="file" name="imagen" accept="image/*">
+              <div class="hint">Opcional. Se guarda junto con el producto.</div>
+            </div>
+          </div>
+          <div class="row" style="margin-top:10px;">
             <button class="btn" type="submit">Agregar producto</button>
           </div>
         </form>
       </div>
-      <div class="card">
+      <div class="menu-section">
         <h2>Tu menú</h2>
-        ${state.productos.length === 0 ? '<div class="empty">Todavía no agregas productos.</div>' : state.productos.map(p => `
-          <div class="list-item">
-            <div class="li-main">
-              <div class="li-title">${escapeHtml(p.nombre)}</div>
-              <div class="li-sub">Venta ${fmtMoney(p.precioVenta)} · costo ${fmtMoney(p.costo)} · ganancia ${fmtMoney((Number(p.precioVenta)||0)-(Number(p.costo)||0))}</div>
+        ${state.productos.length === 0 ? '<div class="empty">Todavía no agregas productos.</div>' : `<div class="menu-grid">${state.productos.map(p => `
+          <div class="card menu-card">
+            ${p.imagen ? `<img class="menu-image" src="${escapeHtml(p.imagen)}" alt="${escapeHtml(p.nombre)}">` : '<div class="menu-image-placeholder" aria-hidden="true">🍽️</div>'}
+            <div class="menu-card-body">
+              <div class="menu-card-title">${escapeHtml(p.nombre)}</div>
+              <div class="menu-card-price">${fmtMoney(p.precioVenta)}</div>
+              <div class="menu-card-meta">Costo ${fmtMoney(p.costo)} · ganancia ${fmtMoney((Number(p.precioVenta)||0)-(Number(p.costo)||0))}</div>
+              <div class="li-actions">
+                <button class="btn danger small" data-del-producto="${p.id}">Eliminar</button>
+              </div>
             </div>
-            <div class="li-actions">
-              <button class="btn danger small" data-del-producto="${p.id}">✕</button>
-            </div>
-          </div>`).join('')}
+          </div>`).join('')}</div>`}
       </div>
     `;
   }
@@ -721,6 +741,15 @@
     }
   }
 
+  function fileToDataUrl(file){
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
   function escapeHtml(s){
     return String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
@@ -810,13 +839,17 @@
     }
 
     const formProducto = document.getElementById('formProducto');
-    if (formProducto) formProducto.addEventListener('submit', (e) => {
+    if (formProducto) formProducto.addEventListener('submit', async (e) => {
       e.preventDefault();
       const fd = new FormData(formProducto);
+      const imageFile = fd.get('imagen');
+      let imagen = '';
+      if (imageFile && imageFile.size) imagen = await fileToDataUrl(imageFile);
       addDoc('productos', {
         nombre: fd.get('nombre').trim(),
         precioVenta: Number(fd.get('precioVenta')) || 0,
-        costo: Number(fd.get('costo')) || 0
+        costo: Number(fd.get('costo')) || 0,
+        imagen
       });
       formProducto.reset();
     });
